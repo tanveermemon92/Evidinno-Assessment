@@ -1,14 +1,11 @@
-const natural = require('natural');
-
+// Function to transform natural language query into search query
 function transformQuery(query) {
     // Tokenize the query
-    const tokenizer = new natural.WordTokenizer();
-    const tokens = tokenizer.tokenize(query);
+    const tokens = query.toLowerCase().split(' ');
 
-    // Stemming and removing stop words
-    const stemmer = natural.PorterStemmer;
-    const stopwords = new Set(natural.stopwords);
-    const filteredTokens = tokens.filter(token => !stopwords.has(token.toLowerCase())).map(token => stemmer.stem(token));
+    // Remove stop words
+    const stopWords = new Set(['what', 'are', 'the', 'to', 'and', 'or', 'if', 'they', 'did', 'in', 'their', 'for', 'were', 'used']);
+    const filteredTokens = tokens.filter(token => !stopWords.has(token));
 
     // Construct search query
     const searchQuery = filteredTokens.join(' ');
@@ -17,23 +14,30 @@ function transformQuery(query) {
 }
 const axios = require('axios');
 
-const apiKey = 'e3ecf275275745beadaed928bd1c6aad'; // Replace with your NewsAPI key
-const apiUrl = 'https://newsapi.org/v2/everything';
-
+// Function to search news articles using NewsAPI
 async function searchNews(query) {
+    const apiKey = 'e3ecf275275745beadaed928bd1c6aad'; // Replace 'YOUR_API_KEY' with your NewsAPI key
+    const apiUrl = 'https://newsapi.org/v2/everything';
+
+    // Transform the query
     const transformedQuery = transformQuery(query);
-    const params = {
-        q: transformedQuery,
-        apiKey: apiKey,
-        language: 'en',
-        sortBy: 'publishedAt'
-    };
 
     try {
-        const response = await axios.get(apiUrl, { params });
+        // Make GET request to NewsAPI
+        const response = await axios.get(apiUrl, {
+            params: {
+                q: transformedQuery,
+                apiKey: apiKey,
+                language: 'en',
+                sortBy: 'publishedAt'
+            }
+        });
+
+        // Return articles
         return response.data.articles;
     } catch (error) {
-        console.error('Error fetching news:', error);
+        console.error('Error searching news:', error);
         return [];
     }
 }
+
